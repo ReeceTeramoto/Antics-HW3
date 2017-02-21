@@ -30,7 +30,7 @@ class AIPlayer(Player):
     #   inputPlayerId - The id to give the new player (int)
     ##
     def __init__(self, inputPlayerId):
-        super(AIPlayer,self).__init__(inputPlayerId, "searchFoodGatherer")
+        super(AIPlayer,self).__init__(inputPlayerId, "teramoto17_marston18_AI")
         self.depth = 2
         self.myTunnel = None
         self.myFood = None
@@ -153,7 +153,11 @@ class AIPlayer(Player):
         
         score = .5 # starting score nobody is winning
         #get the variables we will need
-        me = currentState.whoseTurn
+
+        
+        # me = currentState.whoseTurn
+        me = self.playerId
+        
         myInv = getCurrPlayerInventory(currentState)
         oppInv = self.getOppInv(currentState)
         #if i won return 1 if opp won return 0
@@ -399,27 +403,35 @@ class AIPlayer(Player):
         #step a
         #list all possible moves not end turn
         moves = listAllLegalMoves(currentNode.nextState)
+        # print "generating all legal moves for player " + str(currentNode.nextState.whoseTurn)
+
+        # note: removed the END move filter
+        allMoves = [move for move in moves if move.moveType != BUILD]
         
-        allMoves = [move for move in moves if move.moveType != END or move.moveType != BUILD]
         myAnts =getAntList(currentState, currentState.whoseTurn, (WORKER,QUEEN,SOLDIER,R_SOLDIER,DRONE))
         #make a list of nodes
         nodes = []
         for move in allMoves:
-            if(move.moveType ==MOVE_ANT):
-                if(getAntAt(currentState,move.coordList[0]).type == WORKER):
-                    if(not getAntAt(currentState,move.coordList[0]).carrying): #if the ant has no food go to food
-                        if(stepsToReach(currentState, move.coordList[0], self.myFood.coords) > \
-                           stepsToReach(currentState, move.coordList[len(move.coordList)-1],self.myFood.coords)):
-                            nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
-                    else:
-                        if(stepsToReach(currentState, move.coordList[0], self.myTunnel.coords) > \
-                           stepsToReach(currentState, move.coordList[len(move.coordList)-1],self.myTunnel.coords)): #if the ant has food go to tunnel
-                            nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
-                elif(getAntAt(currentState,move.coordList[0]).type == QUEEN):
-                    if(move.coordList[0] == self.myFood.coords):
+
+            # if the move is an end move
+            if move.moveType == END:
+                nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
+                continue
+
+            if(getAntAt(currentState,move.coordList[0]).type == WORKER):
+                if(not getAntAt(currentState,move.coordList[0]).carrying): #if the ant has no food go to food
+                    if(stepsToReach(currentState, move.coordList[0], self.myFood.coords) > \
+                       stepsToReach(currentState, move.coordList[len(move.coordList)-1],self.myFood.coords)):
                         nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
                 else:
+                    if(stepsToReach(currentState, move.coordList[0], self.myTunnel.coords) > \
+                       stepsToReach(currentState, move.coordList[len(move.coordList)-1],self.myTunnel.coords)): #if the ant has food go to tunnel
+                        nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
+            elif(getAntAt(currentState,move.coordList[0]).type == QUEEN):
+                if(move.coordList[0] == self.myFood.coords):
                     nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
+            else:
+                nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
         nodes = sorted(nodes, key=lambda n: n.stateEval, reverse = True) #sort the list borrowed from Stack Overflow
         #recursive case
         if(depth != self.depth):
@@ -434,18 +446,38 @@ class AIPlayer(Player):
         if(depth > 0):
             return self.helperMethod(nodes)
         else:
+
+            # don't consider the END move as a move unless it's the only one we can make
+            nodes = [node for node in nodes if node.move.moveType != END]
+            
             for i in range(0,10):
                 if( i >= len(nodes)):
                    break
+
+                
                 node = nodes[i]
-                if node.stateEval >= bestEval:
-                    bestEval = node.stateEval
-                    bestNode = node
+
+                # if it's the max player's turn
+                if currentState.whoseTurn == (self.playerId):
+                    if node.stateEval >= bestEval:
+                        bestEval = node.stateEval
+                        bestNode = node
+
+                # if it's the min player's turn
+                if currentState.whoseTurn == (1 - self.playerId):
+                    if node.stateEval <= bestEval:
+                        bestEval = node.stateEval
+                        bestNode = node
+                
             #print "total: " + str(time.clock() - t0)
             if bestNode is not None:
-                #print str(bestNode.move)
+                #print "best node's move: " + str(bestNode.move)
+                #print "all nodes: "
+                #for node in nodes[:10]:
+                #    print str(node.move) + " value: " + str(node.stateEval)
                 return bestNode.move
             else:
+                #print "could not find bestNode, returning END move"
                 return Move(END, None,None)
         return Move(END, None,None)
 
