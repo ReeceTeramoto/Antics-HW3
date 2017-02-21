@@ -410,16 +410,16 @@ class AIPlayer(Player):
                     if(not getAntAt(currentState,move.coordList[0]).carrying): #if the ant has no food go to food
                         if(stepsToReach(currentState, move.coordList[0], self.myFood.coords) > \
                            stepsToReach(currentState, move.coordList[len(move.coordList)-1],self.myFood.coords)):
-                            nodes.append(Node(move, getNextState(currentState,move), self.gameStateEval(getNextState(currentState,move)),currentState))
+                            nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
                     else:
                         if(stepsToReach(currentState, move.coordList[0], self.myTunnel.coords) > \
                            stepsToReach(currentState, move.coordList[len(move.coordList)-1],self.myTunnel.coords)): #if the ant has food go to tunnel
-                            nodes.append(Node(move, getNextState(currentState,move), self.gameStateEval(getNextState(currentState,move)),currentState))
+                            nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
                 elif(getAntAt(currentState,move.coordList[0]).type == QUEEN):
                     if(move.coordList[0] == self.myFood.coords):
-                        nodes.append(Node(move, getNextState(currentState,move), self.gameStateEval(getNextState(currentState,move)),currentState))
+                        nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
                 else:
-                    nodes.append(Node(move, getNextState(currentState,move), self.gameStateEval(getNextState(currentState,move)),currentState))
+                    nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
         nodes = sorted(nodes, key=lambda n: n.stateEval, reverse = True) #sort the list borrowed from Stack Overflow
         #recursive case
         if(depth != self.depth):
