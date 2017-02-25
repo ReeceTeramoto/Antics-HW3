@@ -12,6 +12,15 @@ from Move import Move
 from GameState import *
 from AIPlayerUtils import *
 
+
+# takes 2 ranges, returns true if they are overlapping
+def overlapping(r1, r2):
+    if r1[1] < r2[0]:
+        return True
+    else:
+        return False
+
+
 ##
 #AIPlayer
 #Description: The responsbility of this class is to interact with the game by
@@ -31,7 +40,7 @@ class AIPlayer(Player):
     ##
     def __init__(self, inputPlayerId):
         super(AIPlayer,self).__init__(inputPlayerId, "teramoto17_marston18_AI")
-        self.depth = 2
+        self.depth = 3
         self.myTunnel = None
         self.myFood = None
 
@@ -119,7 +128,7 @@ class AIPlayer(Player):
                     self.myFood = food
                     bestDistSoFar = dist
         #use the recursive method
-        return self.pickMove(Node(None, currentState, 0.0, None),0)
+        return self.pickMove(Node(None, currentState, 0.0, None, [0,1]),0)
 
 
     ##
@@ -413,25 +422,61 @@ class AIPlayer(Player):
         nodes = []
         for move in allMoves:
 
+            
+            # Pruning: if the current node's range doesn't overlap with the parent node's range, then break
+            parentNode = currentNode.parent
+            if parentNode is not None:
+                if not overlapping(currentNode.range, parentNode.range):
+                    # print "We just pruned something."
+                    break
+            
+            idxOfStateEval = 0
+            if currentState.whoseTurn == self.playerId:
+                # we know it's the max player's turn
+                idxOfStateEval = 0
+            else:
+                idxOfStateEval = 1
+
+
+            # find the range of the new move, update the current node's range
+            newRange = [0,1]
+            stateEval = self.gameStateEval(getNextStateAdversarial(currentState,move))
+            newRange[idxOfStateEval] = stateEval
+
+            # update the current node's range after each child's range discovery
+            # if currentNode is a max node
+            if currentState.whoseTurn == self.playerId:
+                if stateEval > currentNode.range[0]:
+                    currentNode.range[0] = stateEval
+            # if currentNode is a min node
+            else:
+                if stateEval < currentNode.range[1]:
+                    currentNode.range[1] = stateEval
+
+            
+
             # if the move is an end move
             if move.moveType == END:
-                nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
+
+                    
+                nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
                 continue
 
             if(getAntAt(currentState,move.coordList[0]).type == WORKER):
                 if(not getAntAt(currentState,move.coordList[0]).carrying): #if the ant has no food go to food
                     if(stepsToReach(currentState, move.coordList[0], self.myFood.coords) > \
                        stepsToReach(currentState, move.coordList[len(move.coordList)-1],self.myFood.coords)):
-                        nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
+                        nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
                 else:
                     if(stepsToReach(currentState, move.coordList[0], self.myTunnel.coords) > \
                        stepsToReach(currentState, move.coordList[len(move.coordList)-1],self.myTunnel.coords)): #if the ant has food go to tunnel
-                        nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
+                        nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
             elif(getAntAt(currentState,move.coordList[0]).type == QUEEN):
                 if(move.coordList[0] == self.myFood.coords):
-                    nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
+                    nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
             else:
-                nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentState))
+                nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
+                
         nodes = sorted(nodes, key=lambda n: n.stateEval, reverse = True) #sort the list borrowed from Stack Overflow
         #recursive case
         if(depth != self.depth):
@@ -487,11 +532,13 @@ class AIPlayer(Player):
 #definition of the node      
 class Node(object):
     #create a node object
-    def __init__(self, move, nextState, stateEval, parent):
+    # range = a list of two numbers
+    def __init__(self, move, nextState, stateEval, parent, newRange):
         self.move = move
         self.nextState = nextState
         self.stateEval = stateEval
         self.parent = parent
+        self.range = newRange
     #print a node string
     def __str__(self):
         return "Node: " + str(move) +" " + str(nextState)
