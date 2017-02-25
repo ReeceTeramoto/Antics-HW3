@@ -13,7 +13,16 @@ from GameState import *
 from AIPlayerUtils import *
 
 
-# takes 2 ranges, returns true if they are overlapping
+##
+#getPlacement
+#
+#Description: takes 2 ranges, returns true if they are overlapping
+#
+#Parameters:
+#   r1, r2 - the two range
+#
+#Return: True if ranges are overlapping, false if otherwise
+##
 def overlapping(r1, r2):
     if r1[1] < r2[0]:
         return True
@@ -430,7 +439,7 @@ class AIPlayer(Player):
                     # print "We just pruned something."
                     break
             
-            idxOfStateEval = 0
+             idxOfStateEval = 0
             if currentState.whoseTurn == self.playerId:
                 # we know it's the max player's turn
                 idxOfStateEval = 0
@@ -528,8 +537,17 @@ class AIPlayer(Player):
 
 
                 
-                
-#definition of the node      
+               
+##
+#Node
+#Description: Represents a node in the tree showing all game states
+#
+#Variables:
+#   move - the move taken by the parent to get to the current node
+#   nextState - the state that results from the move being taken
+#   parent - reference to the parent node
+#   newRange - the range of values of the node (used for pruning)
+##     
 class Node(object):
     #create a node object
     # range = a list of two numbers
@@ -543,6 +561,13 @@ class Node(object):
     def __str__(self):
         return "Node: " + str(move) +" " + str(nextState)
 
+##
+#MyTest
+#Description: Handles unit testing
+#
+#Variables:
+#   unittest.TestCase - the test case
+## 
 class MyTest(unittest.TestCase):
     #unit test   
     myAnts = []
@@ -627,8 +652,6 @@ class MyTest(unittest.TestCase):
     #check that only the one ant on my side is carrying food
     assert abs(player.carryEval(state) - .001) <.00001
     
-
-
 
 
     
