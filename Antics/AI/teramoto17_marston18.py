@@ -53,7 +53,7 @@ class AIPlayer(Player):
         self.myTunnel = None
         self.myFood = None
 
-    
+
     ##
     #getPlacement
     #
@@ -110,7 +110,7 @@ class AIPlayer(Player):
         else:
             return [(0, 0)]
 
-    
+
     ##
     #getMove
     #Description: Gets the next move from the Player.
@@ -157,7 +157,7 @@ class AIPlayer(Player):
     ##
     #gameStateEval
     #Description:A function that examines a GameState object and returns a double between 0.0 and 1.0
-    #that indicates how �good� that state is for the agent whose turn it is. This function should
+    #that indicates how ï¿½goodï¿½ that state is for the agent whose turn it is. This function should
     #always return 1.0 if the agent has won. It should always return 0.0 if the enemy has won.
     #Any value greater than 0.5 means that the agent is winning. Any value less than 0.5
     #means it is losing.
@@ -168,16 +168,15 @@ class AIPlayer(Player):
     #Return: value to say who is winning(double)
     ##
     def gameStateEval(self, currentState):
-        
-        score = .5 # starting score nobody is winning
-        #get the variables we will need
 
-        
+        score = .5 # starting score nobody is winning
+
         # me = currentState.whoseTurn
         me = self.playerId
-        
+
         myInv = getCurrPlayerInventory(currentState)
         oppInv = self.getOppInv(currentState)
+
         #if i won return 1 if opp won return 0
         if(self.hasWon(currentState,me)):
             return 1.0
@@ -190,7 +189,7 @@ class AIPlayer(Player):
         score+=self.carryEval(currentState)
         return score
 
-    
+
     ##
     #carryEval
     #Description: if more of my ants are carrying food then return a better score
@@ -206,15 +205,15 @@ class AIPlayer(Player):
         me = currentState.whoseTurn
         myWorkers =getAntList(currentState, me, (WORKER,))
         oppWorkers=getAntList(currentState, (me+1)%2, (WORKER,))
-        
-        #count the number of workers for each team 
+
+        #count the number of workers for each team
         for ant in myWorkers:
             if(ant.carrying):
                 myCount+=1
         for ant in oppWorkers:
             if (ant.carrying):
                 oppCount+=1
-                
+
         #if my workers out number opponent workers then the score is better
         if(myCount > oppCount):
             score = .05
@@ -238,54 +237,17 @@ class AIPlayer(Player):
     ###
     def foodCountEval(self,myInv,oppInv):
         t0 = time.clock()
+        score = 0.0
         # if our food is the same then no score for either team
         if(myInv.foodCount == oppInv.foodCount):
-            score = 0
+            score = 0.0
         elif(myInv.foodCount > oppInv.foodCount):#if i have more food then positive score
             score = .2
-            if(myInv.foodCount - oppInv.foodCount ==1):
-                score += .01*3
-            elif(myInv.foodCount - oppInv.foodCount ==2):
-                score += .02*3
-            elif(myInv.foodCount - oppInv.foodCount ==3):
-                score += .03*3
-            elif(myInv.foodCount - oppInv.foodCount ==4):
-                score += .04*3
-            elif(myInv.foodCount - oppInv.foodCount ==5):
-                score += .05*3
-            elif(myInv.foodCount - oppInv.foodCount ==6):
-                score += .06*3
-            elif(myInv.foodCount - oppInv.foodCount ==7):
-                score += .07*3
-            elif(myInv.foodCount - oppInv.foodCount ==8):
-                score += .08*3
-            elif(myInv.foodCount - oppInv.foodCount ==9):
-                score += .09*3
-            elif(myInv.foodCount - oppInv.foodCount ==10):
-                score += .1*3
-        else:                                   #if opponent has more food then negative score
+            score += 3*(myInv.foodCount - oppInv.foodCount)/100
+        else:           #if opponent has more food then negative score
             score = -.2
-            if(myInv.foodCount - oppInv.foodCount ==-1):
-                score -= .01*3
-            elif(myInv.foodCount - oppInv.foodCount ==-2):
-                score -= .02*3
-            elif(myInv.foodCount - oppInv.foodCount ==-3):
-                score -= .03*3
-            elif(myInv.foodCount - oppInv.foodCount ==-4):
-                score -= .04*3
-            elif(myInv.foodCount - oppInv.foodCount ==-5):
-                score -= .05*3
-            elif(myInv.foodCount - oppInv.foodCount ==-6):
-                score -= .06*3
-            elif(myInv.foodCount - oppInv.foodCount ==-7):
-                score -= .07*3
-            elif(myInv.foodCount - oppInv.foodCount ==-8):
-                score -= .08*3
-            elif(myInv.foodCount - oppInv.foodCount ==-9):
-                score -= .09*3
-            elif(myInv.foodCount - oppInv.foodCount ==-10):
-                score -= .1*3
-        
+            score += 3*(myInv.foodCount - oppInv.foodCount)/100
+
         return score/5 #divide by arbitrary to keep under 1.0
 
     ##
@@ -302,18 +264,17 @@ class AIPlayer(Player):
     def typeAntEval(self,currentState,myInv,oppInv):
         t0 = time.clock()
         me = currentState.whoseTurn
-        myWorkers =getAntList(currentState, me, (WORKER,)) #get my worker ants
-        oppWorkers=getAntList(currentState, (me+1)%2, (WORKER,)) #get opponent worker ants
+        myWorkers = getAntList(currentState, me, (WORKER,))
+        oppWorkers = getAntList(currentState, (me+1)%2, (WORKER,))
         score =0.00;
-        if(len(myWorkers) > len(oppWorkers)):               #if my workers are more than the other players then thats a good thing
-            
-            score+=.3
+        #if my workers are more than the other players' then thats a good thing
+        if(len(myWorkers) > len(oppWorkers)):
+            score += .3
         elif(len(myWorkers)==len(oppWorkers)):
-            
-            score+=0
+            score += 0
         else:
             score -= .3
-        
+
         return score/8
 
 
@@ -328,19 +289,17 @@ class AIPlayer(Player):
     ##
     def numAntsEval(self, myInv,oppInv):
         t0 = time.clock()
+
         if(len(myInv.ants) > len(oppInv.ants)):
-            scoreToAdd =0.2
-            divideBy =1.0
+            scoreToAdd = 0.2
         elif(len(myInv.ants) == len(oppInv.ants)):
-            scoreToAdd =0
-            divideBy =1.0
+            scoreToAdd = 0
         else:
             scoreToAdd = -0.2
-            divideBy =1.0
-        #print "numAnts: " + str(time.clock() - t0)
+
         return scoreToAdd/4
 
-        
+
     ##
     #getOppInv
     #Description: get the opponent inventory
@@ -354,7 +313,7 @@ class AIPlayer(Player):
         for inv in currentState.inventories:
             if inv.player != currentState.whoseTurn:
                 resultInv = inv
-                break      
+                break
         return resultInv
 
 
@@ -369,12 +328,12 @@ class AIPlayer(Player):
     ##
     def hasWon(self,currentState,playerId):
         opponentId = (playerId + 1) % 2
-        
-        if ((currentState.phase == PLAY_PHASE) and 
+
+        if ((currentState.phase == PLAY_PHASE) and
         ((currentState.inventories[opponentId].getQueen() == None) or
         (currentState.inventories[opponentId].getAnthill().captureHealth <= 0) or
         (currentState.inventories[playerId].foodCount >= FOOD_GOAL) or
-        (currentState.inventories[opponentId].foodCount == 0 and 
+        (currentState.inventories[opponentId].foodCount == 0 and
             len(currentState.inventories[opponentId].ants) == 1))):
             return True
         else:
@@ -382,13 +341,14 @@ class AIPlayer(Player):
 
 
     ##
-    #helperMethod
+    #getBestScore
     #Description: a method to calculate the best of a list of nodes
-    #parameter nodes - a list of nodes ([Node])
+    #
+    #Parameters: nodes - a list of nodes ([Node])
     #
     #Return: a double of the best score in the list of nodes (double)
-    #    
-    def helperMethod(self, nodes):
+    #
+    def getBestScore(self, nodes):
         bestScore =0
         bestNode = None
         for node in nodes:
@@ -396,50 +356,28 @@ class AIPlayer(Player):
                 bestScore = node.stateEval
         return bestScore
 
-
-
-
     ##
-    #pickMove                          ####RECURSIVE####
+    #addNodes
+    #Description: adds nodes to a list depending on if move is good
     #
-    #Description - Generate a list of all possible moves. Generate a list of the Node objects that will result from making each move.
-    #               Recurse on the list of nodes. 
-    #parameter nodes - a list of nodes ([Node])
-    #                   depth a depth limit (int)
-    #Return: either a value to replace the evaluation with (double)
-    #        a move that should be chosen (Move)
-    ##
-    def pickMove(self, currentNode, depth):
-        #variables we will  use
-        currentState = currentNode.nextState
-        foodLocs = getConstrList(currentState, None, (FOOD,))
-        t0 = time.clock()
-        sEval = 0.0
-        bestEval = -1
-        bestNode = None
-
-        #step a
-        #list all possible moves not end turn
-        moves = listAllLegalMoves(currentNode.nextState)
-        # print "generating all legal moves for player " + str(currentNode.nextState.whoseTurn)
-
-        # note: removed the END move filter
-        allMoves = [move for move in moves if move.moveType != BUILD]
-        
-        myAnts =getAntList(currentState, currentState.whoseTurn, (WORKER,QUEEN,SOLDIER,R_SOLDIER,DRONE))
-        #make a list of nodes
+    #Parameters: moves player can make
+    #            currentNode that represents the state of the game
+    #
+    #Return: list of nodes
+    #
+    def addNodes(self, allMoves, currentNode):
         nodes = []
+        currentState = currentNode.nextState
         for move in allMoves:
 
-            
             # Pruning: if the current node's range doesn't overlap with the parent node's range, then break
             parentNode = currentNode.parent
             if parentNode is not None:
                 if not overlapping(currentNode.range, parentNode.range):
                     # print "We just pruned something."
                     break
-            
-             idxOfStateEval = 0
+
+            idxOfStateEval = 0
             if currentState.whoseTurn == self.playerId:
                 # we know it's the max player's turn
                 idxOfStateEval = 0
@@ -462,53 +400,83 @@ class AIPlayer(Player):
                 if stateEval < currentNode.range[1]:
                     currentNode.range[1] = stateEval
 
-            
-
             # if the move is an end move
             if move.moveType == END:
-
-                    
-                nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
+                nodes.append(Node(move, getNextStateAdversarial(currentState,move), \
+                self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
                 continue
 
             if(getAntAt(currentState,move.coordList[0]).type == WORKER):
-                if(not getAntAt(currentState,move.coordList[0]).carrying): #if the ant has no food go to food
+                if(not getAntAt(currentState,move.coordList[0]).carrying): #if the ant has no food, go to food
                     if(stepsToReach(currentState, move.coordList[0], self.myFood.coords) > \
                        stepsToReach(currentState, move.coordList[len(move.coordList)-1],self.myFood.coords)):
-                        nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
+                        nodes.append(Node(move, getNextStateAdversarial(currentState,move), \
+                        self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
                 else:
+                    #if the ant has food go to tunnel
                     if(stepsToReach(currentState, move.coordList[0], self.myTunnel.coords) > \
-                       stepsToReach(currentState, move.coordList[len(move.coordList)-1],self.myTunnel.coords)): #if the ant has food go to tunnel
-                        nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
+                       stepsToReach(currentState, move.coordList[len(move.coordList)-1],self.myTunnel.coords)):
+                        nodes.append(Node(move, getNextStateAdversarial(currentState,move), \
+                        self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
             elif(getAntAt(currentState,move.coordList[0]).type == QUEEN):
                 if(move.coordList[0] == self.myFood.coords):
-                    nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
+                    nodes.append(Node(move, getNextStateAdversarial(currentState,move), \
+                    self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
             else:
-                nodes.append(Node(move, getNextStateAdversarial(currentState,move), self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
-                
+                nodes.append(Node(move, getNextStateAdversarial(currentState,move), \
+                self.gameStateEval(getNextStateAdversarial(currentState,move)),currentNode, newRange))
+
+        return nodes
+
+
+    ##
+    #pickMove                          ####RECURSIVE####
+    #
+    #Description - Generate a list of all possible moves. Generate a list of the Node objects that will result from making each move.
+    #               Recurse on the list of nodes.
+    #parameter nodes - a list of nodes ([Node])
+    #                   depth a depth limit (int)
+    #Return: either a value to replace the evaluation with (double)
+    #        a move that should be chosen (Move)
+    ##
+    def pickMove(self, currentNode, depth):
+        currentState = currentNode.nextState
+        sEval = 0.0
+        bestEval = -1
+        bestNode = None
+
+        #list all possible moves not end turn
+        moves = listAllLegalMoves(currentNode.nextState)
+
+        # note: removed the END move filter
+        allMoves = [move for move in moves if move.moveType != BUILD]
+        myAnts = getAntList(currentState, currentState.whoseTurn, (WORKER,QUEEN,SOLDIER,R_SOLDIER,DRONE))
+
+        #make a list of nodes
+        nodes = []
+        nodes = self.addNodes(allMoves, currentNode)
+
         nodes = sorted(nodes, key=lambda n: n.stateEval, reverse = True) #sort the list borrowed from Stack Overflow
+
         #recursive case
         if(depth != self.depth):
            for i in range(0,10):
                if( i >= len(nodes)):
                    break
-               #print nodes[i].stateEval 
                node = nodes[i]
                sEval= self.pickMove(node, depth+1)
                node.stateEval = sEval
-        #like it says in the assignment step 5
+               
         if(depth > 0):
-            return self.helperMethod(nodes)
+            return self.getBestScore(nodes)
         else:
-
             # don't consider the END move as a move unless it's the only one we can make
             nodes = [node for node in nodes if node.move.moveType != END]
-            
+
             for i in range(0,10):
                 if( i >= len(nodes)):
                    break
 
-                
                 node = nodes[i]
 
                 # if it's the max player's turn
@@ -522,22 +490,17 @@ class AIPlayer(Player):
                     if node.stateEval <= bestEval:
                         bestEval = node.stateEval
                         bestNode = node
-                
-            #print "total: " + str(time.clock() - t0)
+
             if bestNode is not None:
-                #print "best node's move: " + str(bestNode.move)
-                #print "all nodes: "
-                #for node in nodes[:10]:
-                #    print str(node.move) + " value: " + str(node.stateEval)
                 return bestNode.move
             else:
-                #print "could not find bestNode, returning END move"
                 return Move(END, None,None)
+
         return Move(END, None,None)
 
 
-                
-               
+
+
 ##
 #Node
 #Description: Represents a node in the tree showing all game states
@@ -547,7 +510,7 @@ class AIPlayer(Player):
 #   nextState - the state that results from the move being taken
 #   parent - reference to the parent node
 #   newRange - the range of values of the node (used for pruning)
-##     
+##
 class Node(object):
     #create a node object
     # range = a list of two numbers
@@ -560,98 +523,3 @@ class Node(object):
     #print a node string
     def __str__(self):
         return "Node: " + str(move) +" " + str(nextState)
-
-##
-#MyTest
-#Description: Handles unit testing
-#
-#Variables:
-#   unittest.TestCase - the test case
-## 
-class MyTest(unittest.TestCase):
-    #unit test   
-    myAnts = []
-    oppAnts =[]
-    myQueen = Ant((9,3),QUEEN,0)
-    myWorker =Ant ((6,2),WORKER, 0)
-    myWorker.carrying = True
-    oppQ = Ant((5,7),QUEEN,0)
-    oppW =Ant ((6,6),WORKER, 0)
-    myAnts.append(myQueen)
-    myAnts.append(myWorker)
-    oppAnts.append(oppQ)
-    oppAnts.append(oppW)
-    #initialize all the constructions
-    constrs = []
-    constrs1 = []
-    constrs2 = []
-    constrs2.append(Building((9,3),ANTHILL, 0))
-    constrs2.append(Building((7,1),TUNNEL, 0))
-    constrs1.append(Building((5,7),ANTHILL, 1))
-    constrs1.append(Building((6,6),TUNNEL, 1))
-    constrs.append(Building((6,7),GRASS, None))
-    constrs.append(Building((6,8),GRASS, None))
-    constrs.append(Building((6,9),GRASS, None))
-    constrs.append(Building((1,6),GRASS, None))
-    constrs.append(Building((1,7),GRASS, None))
-    constrs.append(Building((1,8),GRASS, None))
-    constrs.append(Building((1,9),GRASS, None))
-    constrs.append(Building((2,6),GRASS, None))
-    constrs.append(Building((2,8),GRASS, None))
-    constrs.append(Building((2,7),GRASS, None))
-    constrs.append(Building((0,1),GRASS, None))
-    constrs.append(Building((0,2),GRASS, None))
-    constrs.append(Building((0,3),GRASS, None))
-    constrs.append(Building((0,0),GRASS, None))
-    constrs.append(Building((1,1),GRASS, None))
-    constrs.append(Building((1,0),GRASS, None))
-    constrs.append(Building((1,2),GRASS, None))
-    constrs.append(Building((1,3),GRASS, None))
-    constrs.append(Building((2,0),GRASS, None))
-    constrs.append(Building((2,1),GRASS, None))
-    constrs.append(Building((6,2),FOOD, None))
-    constrs.append(Building((6,3),FOOD, None))
-    constrs.append(Building((9,6),FOOD, None))
-    constrs.append(Building((9,7),FOOD, None))
-    #create a new board for the gamestates
-    newBoard = []
-    for i in range(0,10):
-        newBoard.append([])
-        for j in range(0,10):
-            for c in constrs:
-                if(c.coords == (i,j)):
-                   newBoard[i].append(c)
-                   continue
-            for c in constrs1:
-                if(c.coords == (i,j)):
-                   newBoard[i].append(c)
-                   continue 
-            for c in constrs2:
-                if(c.coords == (i,j)):
-                   newBoard[i].append(c)
-                   continue
-            newBoard[i].append(None)
-    #create inventories
-    myInv = Inventory(0,myAnts, constrs2, 1)
-    oppInv= Inventory(1,oppAnts, constrs1, 1)
-    food = Inventory(NEUTRAL,[], constrs, 0)
-    invs = (myInv,oppInv,food)
-    #state is made
-    state = GameState(newBoard, invs, 3, 0)
-    player = AIPlayer(0)
-
-    #Now that the state is created we can test the functions
-    #first test that the returned value of the current state is .501
-    assert abs(player.gameStateEval(state)- .501) < .00001
-    #now test that the ants on each side are equal
-    assert player.numAntsEval(myInv,oppInv) == 0
-    #now test that neither side has more than the other of a type of ant
-    assert player.typeAntEval(state,myInv,oppInv) == 0
-    #now test that the food counts are equal
-    assert player.foodCountEval(myInv,oppInv) == 0
-    #check that only the one ant on my side is carrying food
-    assert abs(player.carryEval(state) - .001) <.00001
-    
-
-
-    
